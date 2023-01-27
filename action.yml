@@ -55,6 +55,9 @@ inputs:
   path:
     description: Path to Dockerfile, defaults to the working directory
     default: .
+  delete_untagged:
+    description: Set to True if you want to delete all untagged images in the repository
+    default: false
   prebuild_script:
     description: Relative path from top-level to script to run before Docker build
     required: false

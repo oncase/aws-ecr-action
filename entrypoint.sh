@@ -8,6 +8,7 @@ INPUT_CREATE_REPO="${INPUT_CREATE_REPO:-false}"
 INPUT_SET_REPO_POLICY="${INPUT_SET_REPO_POLICY:-false}"
 INPUT_REPO_POLICY_FILE="${INPUT_REPO_POLICY_FILE:-repo-policy.json}"
 INPUT_IMAGE_SCANNING_CONFIGURATION="${INPUT_IMAGE_SCANNING_CONFIGURATION:-false}"
+INPUT_DELETE_UNTAGGED="${INPUT_DELETE_UNTAGGED:-false}"
 
 function main() {
   sanitize "${INPUT_ACCESS_KEY_ID}" "access_key_id"
@@ -27,6 +28,7 @@ function main() {
   set_ecr_repo_policy $INPUT_SET_REPO_POLICY
   put_image_scanning_configuration $INPUT_IMAGE_SCANNING_CONFIGURATION
   docker_push_to_ecr $INPUT_TAGS $ACCOUNT_URL
+  delete_untagged_ecr_images $INPUT_DELETE_UNTAGGED
 }
 
 function sanitize() {
@@ -154,6 +156,16 @@ function docker_push_to_ecr() {
     echo name=image::$2/$INPUT_REPO:$tag >> $GITHUB_OUTPUT
   done
   echo "== FINISHED PUSH TO ECR"
+}
+
+function delete_untagged_ecr_images() {
+  echo "== START UNTAGGED DELETION"
+  
+  if [ "${1}" = true ]; then
+    IMAGES_TO_DELETE=$( aws ecr list-images --region $INPUT_REGION --repository-name $INPUT_REPO --filter "tagStatus=UNTAGGED" --query 'imageIds[*]' --output json )
+    aws ecr batch-delete-image --region $INPUT_REGION --repository-name $INPUT_REPO --image-ids "$IMAGES_TO_DELETE" || true
+  fi
+  echo "== FINISHED UNTAGGED DELETION"
 }
 
 main
