@@ -159,13 +159,13 @@ function docker_push_to_ecr() {
 }
 
 function delete_untagged_ecr_images() {
-  echo "== START UNTAGGED DELETION"
   
   if [ "${1}" = true ]; then
+    echo "== START UNTAGGED DELETION"
     IMAGES_TO_DELETE=$( aws ecr list-images --region $INPUT_REGION --repository-name $INPUT_REPO --filter "tagStatus=UNTAGGED" --query 'imageIds[*]' --output json )
     aws ecr batch-delete-image --region $INPUT_REGION --repository-name $INPUT_REPO --image-ids "$IMAGES_TO_DELETE" || true
+    echo "== FINISHED UNTAGGED DELETION"
   fi
-  echo "== FINISHED UNTAGGED DELETION"
 }
 
 main
